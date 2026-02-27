@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cost Guesser — How Much Does It Cost? Daily Price Guessing Game</title>
 
-  <!-- Google Analytics -->
+  <!-- Google Analytics — replace TRACKING-ID with your actual ID -->
+  <!--
   <script async src="https://www.googletagmanager.com/gtag/js?id=TRACKING-ID-HERE"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,6 +14,7 @@
     gtag('js', new Date());
     gtag('config', 'TRACKING-ID-HERE');
   </script>
+  -->
 
   <!-- Google Search Console -->
   <meta name="google-site-verification" content="VERIFICATION-CODE-HERE" />
@@ -583,14 +585,17 @@ function updateSliderUI() {
 const track = document.getElementById('slider-track');
 
 function getValFromEvent(e) {
+  if (!track) return sliderValue;
   const rect = track.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
   return percentToVal(pct);
 }
 
-track.addEventListener('mousedown', e => { if (gameOver) return; e.preventDefault(); isDragging = true; sliderValue = getValFromEvent(e); updateSliderUI(); document.getElementById('slider-thumb').classList.add('dragging'); });
-track.addEventListener('touchstart', e => { if (gameOver) return; e.preventDefault(); isDragging = true; sliderValue = getValFromEvent(e); updateSliderUI(); document.getElementById('slider-thumb').classList.add('dragging'); }, {passive:false});
+if (track) {
+  track.addEventListener('mousedown', function(e) { if (gameOver) return; e.preventDefault(); isDragging = true; sliderValue = getValFromEvent(e); updateSliderUI(); document.getElementById('slider-thumb').classList.add('dragging'); });
+  track.addEventListener('touchstart', function(e) { if (gameOver) return; e.preventDefault(); isDragging = true; sliderValue = getValFromEvent(e); updateSliderUI(); document.getElementById('slider-thumb').classList.add('dragging'); }, {passive:false});
+}
 
 window.addEventListener('mousemove', e => { if (!isDragging) return; e.preventDefault(); sliderValue = getValFromEvent(e); updateSliderUI(); });
 window.addEventListener('touchmove', e => { if (!isDragging) return; e.preventDefault(); sliderValue = getValFromEvent(e); updateSliderUI(); }, {passive:false});
@@ -703,9 +708,9 @@ function renderGameOver() {
   html += `<div class="emoji-grid">${emojiGrid}</div>`;
   html += `<div class="go-btns">
     <button class="share-btn" id="share-btn" onclick="shareResult()">📋 Share result</button>
-    <button class="play-again-btn" onclick="playRandom()">Play random</button>
+    <button class="play-again-btn" onclick="playRandom()">Next item →</button>
   </div>`;
-  html += `<div class="go-note">New item tomorrow at midnight</div>`;
+  html += `<div class="go-note">89 items to guess — how many can you nail?</div>`;
 
   el.innerHTML = html;
 }
@@ -714,8 +719,8 @@ function shareResult() {
   const dayNum = getDayNumber();
   const emojiGrid = guesses.map(g => getEmoji(g.pctOff)).join(' ');
   const result = won
-    ? `Cost Guesser #${dayNum} — ${guesses.length}/${MAX_GUESSES} 💰\n${emojiGrid}\nhttps://costguesser.com`
-    : `Cost Guesser #${dayNum} — X/${MAX_GUESSES} 💰\n${emojiGrid}\nhttps://costguesser.com`;
+    ? `Cost Guesser 💰 — ${guesses.length}/${MAX_GUESSES}\n${emojiGrid}\nhttps://costguesser.com`
+    : `Cost Guesser 💰 — X/${MAX_GUESSES}\n${emojiGrid}\nhttps://costguesser.com`;
 
   if (navigator.share) {
     navigator.share({ title: 'Cost Guesser', text: result }).catch(() => {});
@@ -727,7 +732,9 @@ function shareResult() {
 }
 
 function playRandom() {
-  const idx = Math.floor(Math.random() * PRODUCTS.length);
+  let idx = Math.floor(Math.random() * PRODUCTS.length);
+  const currentIdx = PRODUCTS.indexOf(currentProduct);
+  while (idx === currentIdx) idx = Math.floor(Math.random() * PRODUCTS.length);
   startGame(idx);
 }
 
@@ -766,7 +773,7 @@ function startGame(idx) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-startGame(getProductIndex());
+startGame(Math.floor(Math.random() * PRODUCTS.length));
 </script>
 
 </body>
